@@ -67,7 +67,6 @@ RUN /opt/venv/bin/pip install --upgrade pip \
         numpy \
         pandas \
         scikit-learn \
-        rpy2 \
         gurobipy
 
 # Make reticulate use this Python by default
