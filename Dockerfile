@@ -46,27 +46,34 @@ RUN R CMD build CatReg-src/CatReg \
     && rm -rf CatReg-src CatReg_2.0.4.tar.gz
 
 #################### Install ClusterLearn and its Python environment
-# Install Python 
+# Install Python, virtual environment support and git
 RUN apt-get update && apt-get install -y \
     python3 \
     python3-pip \
     python3-dev \
+    python3-venv \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-# Install reticulate + dependencies
+# Install reticulate
 RUN R -e "install.packages('reticulate', repos='https://cloud.r-project.org')"
 
+# Create Python virtual environment
+RUN python3 -m venv /opt/venv
+
 # Install ClusterLearn dependencies
-RUN python3 -m pip install --upgrade pip \
-    && python3 -m pip install \
+RUN /opt/venv/bin/pip install --upgrade pip \
+    && /opt/venv/bin/pip install \
         numpy \
         pandas \
         scikit-learn \
         rpy2 \
         gurobipy
 
-# Install ClusterLearn
+# Make reticulate use this Python by default
+ENV RETICULATE_PYTHON=/opt/venv/bin/python
+
+# Install and build ClusterLearn
 RUN git clone https://github.com/mazumder-lab/ClusterLearn.git /opt/ClusterLearn \
     && cd /opt/ClusterLearn/univariate \
     && g++ -fPIC -std=c++17 -c interface.cpp SegSolverCore.cpp PWQclass.cpp \
