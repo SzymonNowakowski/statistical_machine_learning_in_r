@@ -1,13 +1,13 @@
-# Start from the rocker/r-ver image, which always tracks the latest stable R
+#################### Start from the rocker/r-ver image, which always tracks the latest stable R
 FROM rocker/r-ver:latest
 
-# Metadata
+#################### Metadata
 LABEL maintainer="Szymon Nowakowski <s.nowakowski@mimuw.edu.pl>" \
       description="Custom R environment with DMRnet, xgboost, ranger, glmnet, randomForest, CatReg, DAAG, wooldridge, foreign, carData, AER, modeldata" \
       license="GPL-3" \
       org.opencontainers.image.source="https://github.com/SzymonNowakowski/statistical_machine_learning_in_r"
 
-# System dependencies
+#################### System dependencies
 RUN apt-get update && apt-get install -y \
     libcurl4-openssl-dev \
     libssl-dev \
@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y \
     g++ \
     && rm -rf /var/lib/apt/lists/*
 
-# Install selected R packages - layered build
+#################### Install selected R packages - layered build
 RUN R -e "install.packages('xgboost', repos='https://cloud.r-project.org')"
 RUN R -e "install.packages('glmnet', repos='https://cloud.r-project.org')"
 RUN R -e "install.packages('ranger', repos='https://cloud.r-project.org')"
@@ -32,7 +32,7 @@ RUN R -e "install.packages('carData', repos='https://cloud.r-project.org')"
 RUN R -e "install.packages('AER', repos='https://cloud.r-project.org')"
 RUN R -e "install.packages('modeldata', repos='https://cloud.r-project.org')"
 
-# Install CatReg from patched source tarball
+#################### Install CatReg from patched source tarball
 RUN apt-get update && apt-get install -y wget tar && rm -rf /var/lib/apt/lists/* \
     && wget -O CatReg_2.0.4.tar.gz https://cran.r-project.org/src/contrib/CatReg_2.0.4.tar.gz \
     && mkdir CatReg-src \
@@ -45,5 +45,32 @@ RUN R CMD build CatReg-src/CatReg \
     && R CMD INSTALL CatReg_2.0.4.tar.gz \
     && rm -rf CatReg-src CatReg_2.0.4.tar.gz
 
-# Default command: just drop into shell, Rscript call must be explicit
+#################### Install ClusterLearn and its Python environment
+# Install Python 
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    python3-dev \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install reticulate + dependencies
+RUN R -e "install.packages('reticulate', repos='https://cloud.r-project.org')"
+
+# Install ClusterLearn dependencies
+RUN python3 -m pip install --upgrade pip \
+    && python3 -m pip install \
+        numpy \
+        pandas \
+        scikit-learn \
+        rpy2 \
+        gurobipy
+
+# Install ClusterLearn
+RUN git clone https://github.com/mazumder-lab/ClusterLearn.git /opt/ClusterLearn \
+    && cd /opt/ClusterLearn/univariate \
+    && g++ -fPIC -std=c++17 -c interface.cpp SegSolverCore.cpp PWQclass.cpp \
+    && g++ -shared -Wl,-o proximal_c.so interface.o SegSolverCore.o PWQclass.o
+
+#################### Default command: just drop into shell, Rscript call must be explicit
 CMD ["/bin/bash"]
