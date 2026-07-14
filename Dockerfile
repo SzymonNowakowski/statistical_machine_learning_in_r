@@ -39,7 +39,7 @@ RUN apt-get update && apt-get install -y wget tar && rm -rf /var/lib/apt/lists/*
     && tar -xzf CatReg_2.0.4.tar.gz -C CatReg-src
 
 # apply patch to 2.0.4
-COPY R/predict.scope.logistic.R CatReg-src/CatReg/R/predict.scope.logistic.R   
+COPY R/predict.scope.logistic.R_patched CatReg-src/CatReg/R/predict.scope.logistic.R   
 
 RUN R CMD build CatReg-src/CatReg \
     && R CMD INSTALL CatReg_2.0.4.tar.gz \
