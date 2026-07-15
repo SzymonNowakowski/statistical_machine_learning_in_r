@@ -7,6 +7,12 @@ LABEL maintainer="Szymon Nowakowski <s.nowakowski@mimuw.edu.pl>" \
       license="GPL-3" \
       org.opencontainers.image.source="https://github.com/SzymonNowakowski/statistical_machine_learning_in_r"
 
+# Global environment variables to silence Python warnings system-wide (and for reticulate)
+ENV PYTHONWARNINGS="ignore"
+ENV RETICULATE_PYTHON="/opt/venv/bin/python"
+ENV R_HOME="/usr/local/lib/R"
+ENV LD_LIBRARY_PATH="/usr/local/lib/R/lib:${LD_LIBRARY_PATH}"
+
 #################### System dependencies
 RUN apt-get update && apt-get install -y \
     libcurl4-openssl-dev \
@@ -56,6 +62,10 @@ RUN apt-get update && apt-get install -y \
     libeigen3-dev \
     && rm -rf /var/lib/apt/lists/*
 
+# Configure R-level startup variables (Rprofile and Renviron) to force clean environment
+RUN echo "RETICULATE_PYTHON='/opt/venv/bin/python'" >> /usr/local/lib/R/etc/Renviron.site \
+    && echo "PYTHONWARNINGS='ignore'" >> /usr/local/lib/R/etc/Renviron.site
+
 # Install reticulate
 RUN R -e "install.packages('reticulate', repos='https://cloud.r-project.org')"
 
@@ -70,9 +80,6 @@ RUN /opt/venv/bin/pip install --upgrade pip \
         scikit-learn \
         gurobipy
 
-# Make reticulate use this Python by default
-ENV RETICULATE_PYTHON=/opt/venv/bin/python
-
 # Install and build ClusterLearn
 RUN git clone https://github.com/mazumder-lab/ClusterLearn.git /opt/ClusterLearn \
     && cd /opt/ClusterLearn/univariate \
@@ -81,12 +88,6 @@ RUN git clone https://github.com/mazumder-lab/ClusterLearn.git /opt/ClusterLearn
 
 # Add ClusterLearn directory to PYTHONPATH so Python can locate 'utils' and 'MIPSolver'
 ENV PYTHONPATH="${PYTHONPATH}:/opt/ClusterLearn"
-
-# Set R_HOME so that python's rpy2 can locate R
-ENV R_HOME=/usr/local/lib/R
-
-# Direct the linker to the R shared libraries
-ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/local/lib/R/lib"
 
 # Install missing system header libraries required to compile rpy2's C extensions
 RUN apt-get update && apt-get install -y \
@@ -101,9 +102,6 @@ RUN apt-get update && apt-get install -y \
 
 # Install rpy2 in the virtual environment
 RUN /opt/venv/bin/pip install rpy2
-
-# Global environment variable to silence Python warnings system-wide
-ENV PYTHONWARNINGS="ignore"
 
 #################### Default command: just drop into shell, Rscript call must be explicit
 CMD ["/bin/bash"]
