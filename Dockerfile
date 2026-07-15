@@ -74,7 +74,7 @@ RUN /opt/venv/bin/pip install --upgrade pip \
 ENV RETICULATE_PYTHON=/opt/venv/bin/python
 
 # Install and build ClusterLearn
-RUN git clone https://github.com/mazumder-lab/ClusterLearn.git /opt/ClusterLearn \
+RUN git clone https://github.com/SzymonNowakowski/ClusterLearn.git /opt/ClusterLearn \
     && cd /opt/ClusterLearn/univariate \
     && g++ -I/usr/include/eigen3 -fPIC -std=c++17 -c interface.cpp SegSolverCore.cpp PWQclass.cpp \ 
     && g++ -shared -Wl,-o proximal_c.so interface.o SegSolverCore.o PWQclass.o
