@@ -102,5 +102,8 @@ RUN apt-get update && apt-get install -y \
 # Install rpy2 in the virtual environment
 RUN /opt/venv/bin/pip install rpy2
 
+# Global environment variable to silence Python warnings system-wide
+ENV PYTHONWARNINGS="ignore"
+
 #################### Default command: just drop into shell, Rscript call must be explicit
 CMD ["/bin/bash"]
