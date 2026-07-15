@@ -12,12 +12,12 @@ Say it is `4.6.1`
 ## Build, tag and upload the docker image
 ```{bash}
 docker build \
-  -t szymonnowakowski/statistical_machine_learning_in_r:latest \
-  -t szymonnowakowski/statistical_machine_learning_in_r:r4.6.1-20260715 \
+  -t snowakowski/statistical_machine_learning_in_r:latest \
+  -t snowakowski/statistical_machine_learning_in_r:r4.6.1-20260715 \
   .
 
-docker push szymonnowakowski/statistical_machine_learning_in_r:latest
-docker push szymonnowakowski/statistical_machine_learning_in_r:r4.6.1-20260715
+docker push snowakowski/statistical_machine_learning_in_r:latest
+docker push snowakowski/statistical_machine_learning_in_r:r4.6.1-20260715
 ```
 
 ## Test run
@@ -26,5 +26,5 @@ docker run --rm \
     -v "$PWD:/work" \
     -w /work \
     statistical_machine_learning_in_r:latest \
-    Rscript clusterlearn_demo.R
+    Rscript clusterLearn_demo.R
 ```
