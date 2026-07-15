@@ -1,13 +1,13 @@
-#################### Start from the rocker/r-ver image, which always tracks the latest stable R
+#################### Start from the rocker/r-ver image
 FROM rocker/r-ver:latest
 
 #################### Metadata
 LABEL maintainer="Szymon Nowakowski <s.nowakowski@mimuw.edu.pl>" \
-      description="Custom R environment with DMRnet, xgboost, ranger, glmnet, randomForest, CatReg, DAAG, wooldridge, foreign, carData, AER, modeldata" \
+      description="Custom R environment with DMRnet, xgboost, ranger, glmnet, randomForest, CatReg, DAAG, wooldridge, foreign, carData, AER, modeldata, and ClusterLearn C++ wrapper" \
       license="GPL-3" \
       org.opencontainers.image.source="https://github.com/SzymonNowakowski/statistical_machine_learning_in_r"
 
-#################### System dependencies
+#################### System dependencies (added git and libeigen3-dev for ClusterLearn)
 RUN apt-get update && apt-get install -y \
     libcurl4-openssl-dev \
     libssl-dev \
@@ -15,6 +15,8 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     cmake \
     g++ \
+    git \
+    libeigen3-dev \
     && rm -rf /var/lib/apt/lists/*
 
 #################### Install selected R packages - layered build
@@ -38,46 +40,27 @@ RUN apt-get update && apt-get install -y wget tar && rm -rf /var/lib/apt/lists/*
     && mkdir CatReg-src \
     && tar -xzf CatReg_2.0.4.tar.gz -C CatReg-src
 
-# apply patch to 2.0.4
+# Apply patch to CatReg 2.0.4
 COPY R/predict.scope.logistic.R_patched CatReg-src/CatReg/R/predict.scope.logistic.R   
 
 RUN R CMD build CatReg-src/CatReg \
     && R CMD INSTALL CatReg_2.0.4.tar.gz \
     && rm -rf CatReg-src CatReg_2.0.4.tar.gz
 
-#################### Install ClusterLearn and its Python environment
-# Install Python, virtual environment support and git
-RUN apt-get update && apt-get install -y \
-    python3 \
-    python3-pip \
-    python3-dev \
-    python3-venv \
-    git \
-    libeigen3-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install reticulate
-RUN R -e "install.packages('reticulate', repos='https://cloud.r-project.org')"
-
-# Create Python virtual environment
-RUN python3 -m venv /opt/venv
-
-# Install ClusterLearn dependencies
-RUN /opt/venv/bin/pip install --upgrade pip \
-    && /opt/venv/bin/pip install \
-        numpy \
-        pandas \
-        scikit-learn \
-        gurobipy
-
-# Make reticulate use this Python by default
-ENV RETICULATE_PYTHON=/opt/venv/bin/python
-
-# Install and build ClusterLearn
+#################### Compile ClusterLearn C++ Shared Library
+# Komenda git clone automatycznie stworzy katalog /opt/ClusterLearn
 RUN git clone https://github.com/mazumder-lab/ClusterLearn.git /opt/ClusterLearn \
     && cd /opt/ClusterLearn/univariate \
     && g++ -I/usr/include/eigen3 -fPIC -std=c++17 -c interface.cpp SegSolverCore.cpp PWQclass.cpp \ 
-    && g++ -shared -Wl,-o proximal_c.so interface.o SegSolverCore.o PWQclass.o
+    && g++ -shared -Wl,-o BCD_solver.so interface.o SegSolverCore.o PWQclass.o
 
-#################### Default command: just drop into shell, Rscript call must be explicit
-CMD ["/bin/bash"]
+#################### Setup ClusterLearn Wrapper in R Startup Profile
+# Tworzymy dedykowany katalog i kopiujemy plik wrapper-a bezpośrednio do kontenera
+RUN mkdir -p /opt/R
+COPY R/BCD_wrapper.R /opt/R/BCD_wrapper.R
+
+# Informujemy profil startowy R, by ładował ten skrypt przy każdym uruchomieniu
+RUN echo "source('/opt/R/BCD_wrapper.R')" >> /usr/local/lib/R/etc/Rprofile.site
+
+#################### Default command: Launch R interactive terminal by default
+CMD ["R"]
