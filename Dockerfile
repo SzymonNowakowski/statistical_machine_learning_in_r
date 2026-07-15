@@ -85,7 +85,10 @@ ENV PYTHONPATH="${PYTHONPATH}:/opt/ClusterLearn"
 # Set R_HOME so that rpy2 can find the system R installation
 ENV R_HOME=/usr/local/lib/R
 
-# Install rpy2 in the virtual environment to support dependencies in ClusterLearn's utils.py
+# Crucial for compiling rpy2: point the linker to R shared libraries
+ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/local/lib/R/lib"
+
+# Install rpy2 in the virtual environment
 RUN /opt/venv/bin/pip install rpy2
 
 #################### Default command: just drop into shell, Rscript call must be explicit
