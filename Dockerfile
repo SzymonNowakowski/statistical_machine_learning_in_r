@@ -82,5 +82,11 @@ RUN git clone https://github.com/mazumder-lab/ClusterLearn.git /opt/ClusterLearn
 # Add ClusterLearn directory to PYTHONPATH so Python can locate 'utils' and 'MIPSolver'
 ENV PYTHONPATH="${PYTHONPATH}:/opt/ClusterLearn"
 
+# Set R_HOME so that rpy2 can find the system R installation
+ENV R_HOME=/usr/local/lib/R
+
+# Install rpy2 in the virtual environment to support dependencies in ClusterLearn's utils.py
+RUN /opt/venv/bin/pip install rpy2
+
 #################### Default command: just drop into shell, Rscript call must be explicit
 CMD ["/bin/bash"]
