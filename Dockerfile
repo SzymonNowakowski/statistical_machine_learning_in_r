@@ -76,13 +76,12 @@ ENV RETICULATE_PYTHON=/opt/venv/bin/python
 # Define environment variables at the container level
 ENV R_HOME=/usr/local/lib/R
 ENV LD_LIBRARY_PATH="/usr/local/lib/R/lib:${LD_LIBRARY_PATH}"
-ENV DUMMY=1
 
-# Install and build ClusterLearn
+# Install and build ClusterLearn (compiling ALL cpp files in univariate directory)
 RUN git clone https://github.com/SzymonNowakowski/ClusterLearn.git /opt/ClusterLearn \
     && cd /opt/ClusterLearn/univariate \
-    && g++ -I/usr/include/eigen3 -fPIC -std=c++17 -c interface.cpp SegSolverCore.cpp PWQclass.cpp \ 
-    && g++ -shared -Wl,-o proximal_c.so interface.o SegSolverCore.o PWQclass.o
+    && g++ -I/usr/include/eigen3 -fPIC -std=c++17 -c *.cpp \ 
+    && g++ -shared -o proximal_c.so *.o
 
 # Add ClusterLearn directory to PYTHONPATH so Python can locate 'utils' and 'MIPSolver'
 ENV PYTHONPATH="${PYTHONPATH}:/opt/ClusterLearn"
