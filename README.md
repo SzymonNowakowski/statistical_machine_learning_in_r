@@ -25,6 +25,6 @@ docker push snowakowski/statistical_machine_learning_in_r:r4.6.1-20260715
 docker run --rm \
     -v "$PWD:/work" \
     -w /work \
-    statistical_machine_learning_in_r:latest \
+    snowakowski/statistical_machine_learning_in_r:latest \
     Rscript clusterLearn_demo.R
 ```
