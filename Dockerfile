@@ -73,6 +73,10 @@ RUN /opt/venv/bin/pip install --upgrade pip \
 # Make reticulate use this Python by default
 ENV RETICULATE_PYTHON=/opt/venv/bin/python
 
+# Define environment variables at the container level
+ENV R_HOME=/usr/local/lib/R
+ENV LD_LIBRARY_PATH="/usr/local/lib/R/lib:${LD_LIBRARY_PATH}"
+
 # Install and build ClusterLearn
 RUN git clone https://github.com/SzymonNowakowski/ClusterLearn.git /opt/ClusterLearn \
     && cd /opt/ClusterLearn/univariate \
@@ -96,11 +100,6 @@ RUN apt-get update && apt-get install -y \
 # Inject configuration into Renviron.site (before pip/rpy2 and reticulate run)
 RUN echo "RETICULATE_PYTHON='/opt/venv/bin/python'" >> /usr/local/lib/R/etc/Renviron.site \
     && echo "PYTHONWARNINGS='ignore'" >> /usr/local/lib/R/etc/Renviron.site
-
-# Define environment variables at the container level
-ENV R_HOME=/usr/local/lib/R
-ENV LD_LIBRARY_PATH="/usr/local/lib/R/lib:${LD_LIBRARY_PATH}"
-ENV PYTHONWARNINGS="ignore"
 
 # Install rpy2 in the virtual environment (Step 25)
 RUN /opt/venv/bin/pip install rpy2
