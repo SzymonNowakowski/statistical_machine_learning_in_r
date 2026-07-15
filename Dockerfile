@@ -79,8 +79,8 @@ RUN git clone https://github.com/mazumder-lab/ClusterLearn.git /opt/ClusterLearn
     && g++ -I/usr/include/eigen3 -fPIC -std=c++17 -c interface.cpp SegSolverCore.cpp PWQclass.cpp \ 
     && g++ -shared -Wl,-o proximal_c.so interface.o SegSolverCore.o PWQclass.o
 
-# Install ClusterLearn Python Package (MIPSolver)
-RUN cd /opt/ClusterLearn && pip3 install . --break-system-packages
+# Add ClusterLearn directory to PYTHONPATH so Python can locate 'utils' and 'MIPSolver'
+ENV PYTHONPATH="${PYTHONPATH}:/opt/ClusterLearn"
 
 #################### Default command: just drop into shell, Rscript call must be explicit
 CMD ["/bin/bash"]
