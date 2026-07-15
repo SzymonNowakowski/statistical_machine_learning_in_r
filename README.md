@@ -19,3 +19,12 @@ docker build \
 docker push szymonnowakowski/statistical_machine_learning_in_r:latest
 docker push szymonnowakowski/statistical_machine_learning_in_r:r4.6.1-20260714
 ```
+
+## Test run
+```
+docker run --rm \
+    -v "$PWD:/work" \
+    -w /work \
+    statistical_machine_learning_in_r:latest \
+    Rscript clusterlearn_demo.R
+```
