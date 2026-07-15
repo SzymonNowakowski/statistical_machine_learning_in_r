@@ -88,7 +88,7 @@ ENV R_HOME=/usr/local/lib/R
 # Direct the linker to the R shared libraries
 ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/local/lib/R/lib"
 
-# Install missing system header libraries required to compile rpy2's C extensions
+# Install missing system header libraries required to compile rpy2's C extensions (including libicu-dev)
 RUN apt-get update && apt-get install -y \
     libpcre2-dev \
     libdeflate-dev \
@@ -96,10 +96,10 @@ RUN apt-get update && apt-get install -y \
     liblzma-dev \
     libbz2-dev \
     zlib1g-dev \
+    libicu-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Install rpy2 in the virtual environment
-RUN /opt/venv/bin/pip install rpy2
 
 #################### Default command: just drop into shell, Rscript call must be explicit
 CMD ["/bin/bash"]
