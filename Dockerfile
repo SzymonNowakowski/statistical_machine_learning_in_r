@@ -76,6 +76,7 @@ ENV RETICULATE_PYTHON=/opt/venv/bin/python
 # Define environment variables at the container level
 ENV R_HOME=/usr/local/lib/R
 ENV LD_LIBRARY_PATH="/usr/local/lib/R/lib:${LD_LIBRARY_PATH}"
+ENV DUMMY=1
 
 # Install and build ClusterLearn
 RUN git clone https://github.com/SzymonNowakowski/ClusterLearn.git /opt/ClusterLearn \
