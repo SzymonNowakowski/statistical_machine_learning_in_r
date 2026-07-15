@@ -82,11 +82,21 @@ RUN git clone https://github.com/mazumder-lab/ClusterLearn.git /opt/ClusterLearn
 # Add ClusterLearn directory to PYTHONPATH so Python can locate 'utils' and 'MIPSolver'
 ENV PYTHONPATH="${PYTHONPATH}:/opt/ClusterLearn"
 
-# Set R_HOME so that rpy2 can find the system R installation
+# Set R_HOME so that python's rpy2 can locate R
 ENV R_HOME=/usr/local/lib/R
 
-# Crucial for compiling rpy2: point the linker to R shared libraries
+# Direct the linker to the R shared libraries
 ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/local/lib/R/lib"
+
+# Install missing system header libraries required to compile rpy2's C extensions
+RUN apt-get update && apt-get install -y \
+    libpcre2-dev \
+    libdeflate-dev \
+    libzstd-dev \
+    liblzma-dev \
+    libbz2-dev \
+    zlib1g-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install rpy2 in the virtual environment
 RUN /opt/venv/bin/pip install rpy2
