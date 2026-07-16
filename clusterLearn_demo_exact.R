@@ -54,10 +54,10 @@ generated_data <- utils$generate_random_correlated(
 )
 
 # Unpack the generated tuple from Python
-X_cat0    <- py_to_r(generated_data[[1]])
+X_cat0    <- generated_data[[1]]
 X0        <- generated_data[[2]]
-y0        <- py_to_r(generated_data[[3]])
-beta_star <- py_to_r(generated_data[[4]])
+y0        <- generated_data[[3]]
+beta_star <- generated_data[[4]]
 py_groups <- generated_data[[5]]
 
 # ==============================================================================
@@ -67,8 +67,17 @@ py_groups <- generated_data[[5]]
 # Python 0:n     -> R 1:n
 # Python n:2*n   -> R (n+1):(2*n)
 # Python 2*n:3*n -> R (2*n+1):(3*n)
-
+print("x_cat0")
+print(X_cat0)
+print("x0")
 print(X0)
+print("y0")
+print(y0)
+print("betya")
+print(beta_star)
+print("groups")
+print(py_groups)
+
 
 # Dummified design matrices:
 X      <- X0[1:n, ]
