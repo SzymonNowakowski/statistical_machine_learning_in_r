@@ -87,12 +87,21 @@ lambda0 <- 0.05
 # 7. Run Original BCD Wrapper (Warm-start)
 # ==============================================================================
 cat("Running BCD Solver...\n")
+
+# Wrap single values into 1D NumPy arrays to satisfy BCD_wrapper's sequence checks
+l0_list_py <- np$array(c(lambda0))
+l1_list_py <- np$array(c(lambda1))
+l2_list_py <- np$array(c(0.0))
+
 bcd_results <- utils$BCD_wrapper(
-  X_cat_train, y, X_cat_val, y_val,
-  numlevels_ = rep(levels, n_cat),
-  l0_list = np$flip(c(lambda0)),
-  l1_list = np$flip(c(lambda1)),
-  l2_list = np$flip(c(0.0))
+  X = X_cat_train,
+  y = y,
+  Xval = X_cat_val,
+  yval = y_val,
+  numlevels_ = as.integer(rep(levels, n_cat)),
+  l0_list = l0_list_py,
+  l1_list = l1_list_py,
+  l2_list = l2_list_py
 )
 
 beta_bcd <- bcd_results[[1]]
