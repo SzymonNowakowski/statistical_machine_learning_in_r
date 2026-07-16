@@ -1,48 +1,47 @@
 ########### port of https://github.com/mazumder-lab/ClusterLearn/blob/main/demo_exact.py #############
 ################## Szymon Nowakowski assisted by Gemini ########################################
 # ==============================================================================
-# 1. Konfiguracja Środowiska i Import Modułów Pythona
+# 1. Environment Setup and Python Module Imports
 # ==============================================================================
 library(reticulate)
 
-# Wskazanie wirtualnego środowiska Pythona z kontenera
+# Point reticulate to the Python virtual environment inside the container
 use_virtualenv("/opt/venv", required = TRUE)
 
-# Import bibliotek Pythona
-np      <- import("numpy")
-utils   <- import("utils")
+# Import required Python packages
+np       <- import("numpy")
+utils    <- import("utils")
 mip_core <- import("MIPSolver.core")
 
-# Ustawienie ziarna losowości
+# Set random seeds for reproducibility
 rng <- 0L
 np$random$seed(rng)
 set.seed(rng)
 
 # ==============================================================================
-# 2. Parametry i Generowanie beta_star
+# 2. Parameters and Beta Star Configuration
 # ==============================================================================
 n_cat  <- 5L
 levels <- 15L
 
-# Odpowiednik Pythonowego bloku [-2]*4 + [0]*(15-8) + [2]*4
+# Equivalent to Python's: [-2]*4 + [0]*(15-8) + [2]*4
 beta_block <- c(rep(-2, 4), rep(0, levels - 8), rep(2, 4))
 
-# Pierwsze dwie cechy otrzymują powyższy wzorzec, reszta otrzymuje zera
+# First two features get the block pattern, the rest get zeros
 beta <- c(beta_block, beta_block, rep(0, (n_cat - 2L) * levels))
-beta_double <- as.numeric(beta) # rzutowanie na typ float/double
+beta_double <- as.numeric(beta) # Explicitly cast to double/float
 
 # ==============================================================================
-# 3. Generowanie Dane wejściowych (Draw the data)
+# 3. Data Generation
 # ==============================================================================
 n <- 500L
 noise_sigma <- 1.0
 rho <- 0.2
 
-# Macierz kowariancji w R: (1-rho)*I + rho*1
+# Build the pairwise correlation matrix in R: (1-rho)*I + rho*1
 cov_mat <- diag(1 - rho, n_cat) + matrix(rho, n_cat, n_cat)
 
-# Wywołanie generatora z utils.py
-# Przekazujemy 3*n dla pełnego zbioru (Train + Val + Test)
+# Generate synthetic dataset using utils.py (3 * n to cover Train, Val, and Test)
 generated_data <- utils$generate_random_correlated(
   n = as.integer(3 * n),
   cov_mat = cov_mat,
@@ -54,7 +53,7 @@ generated_data <- utils$generate_random_correlated(
   beta = beta_double
 )
 
-# Rozpakowanie wyników (zwracanych jako krotka z Pythona)
+# Unpack the generated tuple from Python
 X_cat0    <- generated_data[[1]]
 X0        <- generated_data[[2]]
 y0        <- generated_data[[3]]
@@ -62,35 +61,35 @@ beta_star <- generated_data[[4]]
 groups    <- generated_data[[5]]
 
 # ==============================================================================
-# 4. Podział Danych (Train / Validation / Test)
+# 4. Train / Validation / Test Splitting
 # ==============================================================================
-# Uwzględniamy 1-indeksowanie w R:
+# Adjusting for R's 1-based indexing:
 # Python 0:n     -> R 1:n
 # Python n:2*n   -> R (n+1):(2*n)
 # Python 2*n:3*n -> R (2*n+1):(3*n)
 
-# Dane zdyskretyzowane (Dummified):
+# Dummified design matrices:
 X      <- X0[1:n, ]
 X_val  <- X0[(n + 1):(2 * n), ]
 X_test <- X0[(2 * n + 1):(3 * n), ]
 
-# Dane kategoryczne (Factors):
+# Categorical factor matrices:
 X_cat_train <- X_cat0[1:n, ]
 X_cat_val   <- X_cat0[(n + 1):(2 * n), ]
 X_cat_test  <- X_cat0[(2 * n + 1):(3 * n), ]
 
-# Wektory odpowiedzi (Targets):
+# Target vectors:
 y      <- y0[1:n]
 y_val  <- y0[(n + 1):(2 * n)]
 y_test <- y0[(2 * n + 1):(3 * n)]
 
 # ==============================================================================
-# 5. BCD Warm-start Solver
+# 5. BCD Warm-start Solver Execution
 # ==============================================================================
 lambda1 <- 0.05
 lambda0 <- 0.05
 
-# l0_list, l1_list, l2_list muszą być przekazane jako wektory float
+# Run BCD solver via utils.py wrapper
 bcd_res <- utils$BCD_wrapper(
   X = X_cat_train,
   y = y,
@@ -106,13 +105,14 @@ beta_bcd <- bcd_res[[1]]
 time_bcd <- bcd_res[[2]]
 
 # ==============================================================================
-# 6. Metryki dla BCD
+# 6. Performance Metrics for BCD
 # ==============================================================================
-# beta_bcd ma rozmiar p+1 (ostatni element to intercept)
+# beta_bcd has size p+1 (the last element is the intercept)
 p <- length(beta_bcd) - 1
 beta_bcd_no_intercept <- beta_bcd[1:p]
 intercept_bcd         <- beta_bcd[p + 1]
 
+# Calculate metrics using utils.py helper
 metrics_bcd <- utils$performance_metrics(
   beta_bcd_no_intercept,
   beta_star,
@@ -130,23 +130,27 @@ purity_nnz_bcd  <- metrics_bcd[[5]]
 nclusters_bcd   <- metrics_bcd[[6]]
 
 # ==============================================================================
-# 7. MIP Solver (Gurobi)
+# 7. MIP Solver (Gurobi) Execution
 # ==============================================================================
-# Obliczenie parametru M (Big-M)
+# Calculate Big-M bound
 M <- 1.2 * max(abs(beta_bcd_no_intercept))
 
-# Inicjalizacja klasy MIPSolver z modułu Python
+# Wrap scalars in 1D NumPy arrays to satisfy python len() checks on l0/l1 parameters
+l0_array <- np$array(c(lambda0))
+l1_array <- np$array(c(lambda1))
+
+# Initialize the MIPSolver class
 mip_solver <- mip_core$MIPSolver(
   X = X,
   y = y,
-  l0 = lambda0,
-  l1 = lambda1,
+  l0 = l0_array,
+  l1 = l1_array,
   groups = groups,
   beta0 = beta_bcd,
   M = M
 )
 
-# Uruchomienie wyszukiwania optymalnego rozwiązania (Row Generation)
+# Solve the mixed integer program using row generation
 mip_res <- mip_solver$GRB_rowgen()
 
 beta_mip <- mip_res[[1]]
@@ -154,7 +158,7 @@ mu_mip   <- mip_res[[2]]
 obj_mip  <- mip_res[[3]]
 gap      <- mip_res[[4]]
 
-# Metryki dla MIP
+# Calculate performance metrics for the exact MIP solver
 metrics_mip <- utils$performance_metrics(
   beta_mip,
   beta_star,
@@ -172,7 +176,7 @@ purity_nnz <- metrics_mip[[5]]
 nclusters  <- metrics_mip[[6]]
 
 # ==============================================================================
-# 8. Prezentacja Wyników (Console Output)
+# 8. Display Results
 # ==============================================================================
 cat("\n==================================================\n")
 cat("MIP results:\n")
