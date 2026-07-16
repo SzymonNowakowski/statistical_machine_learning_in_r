@@ -58,7 +58,7 @@ X_cat0    <- generated_data[[1]]
 X0        <- generated_data[[2]]
 y0        <- generated_data[[3]]
 beta_star <- generated_data[[4]]
-groups    <- generated_data[[5]]
+groups_raw <- generated_data[[5]] # Rename this to raw
 
 # ==============================================================================
 # 4. Train / Validation / Test Splitting
@@ -132,20 +132,25 @@ nclusters_bcd   <- metrics_bcd[[6]]
 # ==============================================================================
 # 7. MIP Solver (Gurobi) Execution
 # ==============================================================================
-# Calculate Big-M bound and explicitly cast to a clean R numeric (Python float)
+# Calculate Big-M bound and explicitly cast to pure R numeric
 M_val <- as.numeric(1.2 * max(abs(beta_bcd_no_intercept)))
 
-# Explicitly cast regularization parameters to clean R numerics (Python floats)
 l0_scalar <- as.numeric(lambda0)
 l1_scalar <- as.numeric(lambda1)
 
-# Initialize the MIPSolver class with pure scalar floats for hyper-parameters
+# FORCE groups into a strict Python list of integer arrays (0-indexed adjustments)
+# This prevents reticulate from collapsing group elements into floats
+py_groups <- tuple_is_fine_but_list_is_better <- lapply(groups_raw, function(g) {
+  np$array(as.integer(g), dtype = "int32")
+})
+
+# Initialize the MIPSolver class
 mip_solver <- mip_core$MIPSolver(
   X = X,
   y = y,
   lambda0 = l0_scalar,
   lambda1 = l1_scalar,
-  groups = groups,
+  groups = py_groups, # Pass the sanitized Python-ready list
   beta0 = beta_bcd,
   M = M_val
 )
