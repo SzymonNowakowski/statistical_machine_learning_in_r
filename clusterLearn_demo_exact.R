@@ -10,7 +10,7 @@ use_virtualenv("/opt/venv", required = TRUE)
 
 # Import required Python packages
 np       <- import("numpy")
-utils    <- import("utils")
+utils    <- import("utils", convert = FALSE)
 mip_core <- import("MIPSolver.core")
 
 # Set random seeds for reproducibility
@@ -52,6 +52,8 @@ generated_data <- utils$generate_random_correlated(
   clustering = 0.0,
   beta = beta_double
 )
+print(py_to_r(generated_data[[5]]))
+str(py_to_r(generated_data[[5]]))
 
 # Unpack the generated tuple from Python
 X_cat0    <- generated_data[[1]]
@@ -161,7 +163,7 @@ gap      <- mip_res[[4]]
 metrics_mip <- utils$performance_metrics(
   beta_mip,
   beta_star,
-  groups,
+  py_groups,
   y_test,
   X_test,
   mu_mip,
