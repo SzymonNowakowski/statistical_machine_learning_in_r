@@ -132,22 +132,22 @@ nclusters_bcd   <- metrics_bcd[[6]]
 # ==============================================================================
 # 7. MIP Solver (Gurobi) Execution
 # ==============================================================================
-# Calculate Big-M bound
-M <- 1.2 * max(abs(beta_bcd_no_intercept))
+# Calculate Big-M bound and explicitly cast to a clean R numeric (Python float)
+M_val <- as.numeric(1.2 * max(abs(beta_bcd_no_intercept)))
 
-# Wrap scalars in 1D NumPy arrays to satisfy python len() checks on l0/l1 parameters
-l0_array <- np$array(c(lambda0))
-l1_array <- np$array(c(lambda1))
+# Explicitly cast regularization parameters to clean R numerics (Python floats)
+l0_scalar <- as.numeric(lambda0)
+l1_scalar <- as.numeric(lambda1)
 
-# Initialize the MIPSolver class
+# Initialize the MIPSolver class with pure scalar floats for hyper-parameters
 mip_solver <- mip_core$MIPSolver(
   X = X,
   y = y,
-  l0 = l0_array,
-  l1 = l1_array,
+  lambda0 = l0_scalar,
+  lambda1 = l1_scalar,
   groups = groups,
   beta0 = beta_bcd,
-  M = M
+  M = M_val
 )
 
 # Solve the mixed integer program using row generation
