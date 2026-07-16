@@ -56,19 +56,10 @@ print(py_to_r(generated_data[[5]]))
 str(py_to_r(generated_data[[5]]))
 
 # Unpack the generated tuple from Python
-X_cat0    <- generated_data[[1]]
-X0        <- generated_data[[2]]
-
-print(py_to_r(X0))
-str(py_to_r(X0))
-
-py_run_string("
-print(type(X))
-print(X.shape)
-")
-
-y0        <- generated_data[[3]]
-beta_star <- generated_data[[4]]
+X_cat0    <- py_to_r(generated_data[[1]])
+X0        <- py_to_r(generated_data[[2]])
+y0        <- py_to_r(generated_data[[3]])
+beta_star <- py_to_r(generated_data[[4]])
 py_groups <- generated_data[[5]]
 
 # ==============================================================================
@@ -127,7 +118,7 @@ intercept_bcd         <- beta_bcd[p + 1]
 metrics_bcd <- utils$performance_metrics(
   beta_bcd_no_intercept,
   beta_star,
-  groups,
+  py_groups,
   y_test,
   X_test,
   intercept_bcd,
