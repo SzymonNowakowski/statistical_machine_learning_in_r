@@ -58,6 +58,15 @@ str(py_to_r(generated_data[[5]]))
 # Unpack the generated tuple from Python
 X_cat0    <- generated_data[[1]]
 X0        <- generated_data[[2]]
+
+print(py_to_r(X0))
+str(py_to_r(X0))
+
+py_run_string("
+print(type(X))
+print(X.shape)
+")
+
 y0        <- generated_data[[3]]
 beta_star <- generated_data[[4]]
 py_groups <- generated_data[[5]]
