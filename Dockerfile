@@ -98,10 +98,9 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Inject configuration into Renviron.site (before pip/rpy2 and reticulate run)
-RUN echo "RETICULATE_PYTHON='/opt/venv/bin/python'" >> /usr/local/lib/R/etc/Renviron.site \
-    && echo "PYTHONWARNINGS='ignore'" >> /usr/local/lib/R/etc/Renviron.site
+#RUN echo "RETICULATE_PYTHON='/opt/venv/bin/python'" >> /usr/local/lib/R/etc/Renviron.site
 
-# Install rpy2 in the virtual environment (Step 25)
+# Install rpy2 in the virtual environment
 RUN /opt/venv/bin/pip install rpy2
 
 #################### Default command: just drop into shell, Rscript call must be explicit
