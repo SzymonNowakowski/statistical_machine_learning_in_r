@@ -86,6 +86,8 @@ RUN git clone https://github.com/SzymonNowakowski/ClusterLearn.git /opt/ClusterL
 # Add ClusterLearn directory to PYTHONPATH so Python can locate 'utils' and 'MIPSolver'
 ENV PYTHONPATH="${PYTHONPATH}:/opt/ClusterLearn"
 
+ENV DUMMY_VAR=1
+
 # Install system dependencies required for rpy2 (Step 24)
 RUN apt-get update && apt-get install -y \
     libpcre2-dev \
