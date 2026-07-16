@@ -21,8 +21,8 @@ set.seed(rng)
 # ==============================================================================
 # 2. Simulation Parameters & Setup
 # ==============================================================================
-n_cat  <- 3L      # Number of categorical predictors
-levels <- 9L      # Number of levels of each categorical predictor
+n_cat  <- 10L      # Number of categorical predictors
+levels <- 12L      # Number of levels of each categorical predictor
 
 # ==============================================================================
 # 3. Create true beta^*
