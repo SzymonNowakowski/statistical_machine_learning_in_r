@@ -55,7 +55,7 @@ generated_data <- utils$generate_random_correlated(
 
 # Unpack the generated tuple from Python
 X_cat0    <- py_to_r(generated_data[[1]])
-X0        <- py_to_r(generated_data[[2]])
+X0        <- generated_data[[2]]
 y0        <- py_to_r(generated_data[[3]])
 beta_star <- py_to_r(generated_data[[4]])
 py_groups <- generated_data[[5]]
