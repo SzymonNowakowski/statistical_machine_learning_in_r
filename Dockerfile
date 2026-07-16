@@ -106,8 +106,3 @@ RUN /opt/venv/bin/pip install rpy2
 
 #################### Default command: just drop into shell, Rscript call must be explicit
 CMD ["/bin/bash"]
-
-
-
-#################### Default command: just drop into shell, Rscript call must be explicit
-CMD ["/bin/bash"]
