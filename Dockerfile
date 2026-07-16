@@ -86,8 +86,6 @@ RUN git clone https://github.com/SzymonNowakowski/ClusterLearn.git /opt/ClusterL
 # Add ClusterLearn directory to PYTHONPATH so Python can locate 'utils' and 'MIPSolver'
 ENV PYTHONPATH="${PYTHONPATH}:/opt/ClusterLearn"
 
-ENV DUMMY_VAR=1
-
 # Install system dependencies required for rpy2 (Step 24)
 RUN apt-get update && apt-get install -y \
     libpcre2-dev \
@@ -98,9 +96,6 @@ RUN apt-get update && apt-get install -y \
     zlib1g-dev \
     libicu-dev \
     && rm -rf /var/lib/apt/lists/*
-
-# Inject configuration into Renviron.site (before pip/rpy2 and reticulate run)
-#RUN echo "RETICULATE_PYTHON='/opt/venv/bin/python'" >> /usr/local/lib/R/etc/Renviron.site
 
 # Install rpy2 in the virtual environment
 RUN /opt/venv/bin/pip install rpy2
