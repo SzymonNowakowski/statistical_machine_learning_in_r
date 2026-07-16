@@ -83,23 +83,24 @@ print(py_groups)
 X      <- X0[1:n, ]
 X_val  <- X0[(n + 1):(2 * n), ]
 X_test <- X0[(2 * n + 1):(3 * n), ]
-
+print("here")
 # Categorical factor matrices:
 X_cat_train <- X_cat0[1:n, ]
 X_cat_val   <- X_cat0[(n + 1):(2 * n), ]
 X_cat_test  <- X_cat0[(2 * n + 1):(3 * n), ]
 
+print("here1")
 # Target vectors:
 y      <- y0[1:n]
 y_val  <- y0[(n + 1):(2 * n)]
 y_test <- y0[(2 * n + 1):(3 * n)]
-
+print("here2")
 # ==============================================================================
 # 5. BCD Warm-start Solver Execution
 # ==============================================================================
 lambda1 <- 0.05
 lambda0 <- 0.05
-
+print("here3")
 # Run BCD solver via utils.py wrapper
 bcd_res <- utils$BCD_wrapper(
   X = X_cat_train,
@@ -111,10 +112,10 @@ bcd_res <- utils$BCD_wrapper(
   l1_list = np$flip(c(lambda1)),
   l2_list = np$flip(c(0.0))
 )
-
+print("here4")
 beta_bcd <- bcd_res[[1]]
 time_bcd <- bcd_res[[2]]
-
+print("here5")
 # ==============================================================================
 # 6. Performance Metrics for BCD
 # ==============================================================================
@@ -122,7 +123,7 @@ time_bcd <- bcd_res[[2]]
 p <- length(beta_bcd) - 1
 beta_bcd_no_intercept <- beta_bcd[1:p]
 intercept_bcd         <- beta_bcd[p + 1]
-
+print("here6")
 # Calculate metrics using utils.py helper
 metrics_bcd <- utils$performance_metrics(
   beta_bcd_no_intercept,
@@ -133,7 +134,7 @@ metrics_bcd <- utils$performance_metrics(
   intercept_bcd,
   mu = mean(y)
 )
-
+print("here7")
 nnz_bcd         <- metrics_bcd[[1]]
 pred_bcd        <- metrics_bcd[[2]]
 purity_bcd      <- metrics_bcd[[4]]
