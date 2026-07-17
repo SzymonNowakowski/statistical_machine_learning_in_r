@@ -77,6 +77,8 @@ ENV RETICULATE_PYTHON=/opt/venv/bin/python
 ENV R_HOME=/usr/local/lib/R
 ENV LD_LIBRARY_PATH="/usr/local/lib/R/lib:${LD_LIBRARY_PATH}"
 
+ENV DUMMY_ENV=1
+
 # Install and build ClusterLearn (compiling ALL cpp files in univariate directory)
 RUN git clone https://github.com/SzymonNowakowski/ClusterLearn.git /opt/ClusterLearn \
     && cd /opt/ClusterLearn/univariate \

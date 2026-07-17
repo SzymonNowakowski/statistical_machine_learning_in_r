@@ -13,11 +13,11 @@ Say it is `4.6.1`
 ```{bash}
 docker build \
   -t snowakowski/statistical_machine_learning_in_r:latest \
-  -t snowakowski/statistical_machine_learning_in_r:r4.6.1-20260716 \
+  -t snowakowski/statistical_machine_learning_in_r:r4.6.1-20260717 \
   .
 
 docker push snowakowski/statistical_machine_learning_in_r:latest
-docker push snowakowski/statistical_machine_learning_in_r:r4.6.1-20260716
+docker push snowakowski/statistical_machine_learning_in_r:r4.6.1-20260717
 ```
 
 ## Test run
