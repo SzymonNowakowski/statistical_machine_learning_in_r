@@ -102,6 +102,7 @@ time_bcd <- bcd_results[[2]]
 # Split intercept and beta coefficients
 intercept <- beta_bcd[length(beta_bcd)]
 beta_bcd_coefs <- beta_bcd[-length(beta_bcd)]
+print(beta_bcd_coefs)
 
 # ==============================================================================
 # 8. Calculate Performance Metrics
