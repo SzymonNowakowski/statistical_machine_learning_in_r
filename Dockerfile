@@ -77,7 +77,8 @@ ENV RETICULATE_PYTHON=/opt/venv/bin/python
 ENV R_HOME=/usr/local/lib/R
 ENV LD_LIBRARY_PATH="/usr/local/lib/R/lib:${LD_LIBRARY_PATH}"
 
-ENV DUMMY_ENV=2
+# the next line invalidates the layer cache whenever the latest commit hash changes, forcing a rebuild of the ClusterLearn installation
+ADD "https://api.github.com/repos/SzymonNowakowski/ClusterLearn/commits/main" /tmp/latest_commit.json
 
 # Install and build ClusterLearn (compiling ALL cpp files in univariate directory)
 RUN git clone https://github.com/SzymonNowakowski/ClusterLearn.git /opt/ClusterLearn \
