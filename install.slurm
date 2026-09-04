@@ -6,8 +6,9 @@
 #SBATCH --partition=msys
 #SBATCH --exclude=msys2
 
-echo "=== Loading R module ==="
+echo "=== Loading modules ==="
 module load r/4.1.3
+module load python/3 2>/dev/null || module load python 2>/dev/null || true
 
 PROJECT_DIR=$(pwd)
 TMP_PKG_DIR="$PROJECT_DIR/build_tmp_pkgs"
@@ -25,7 +26,7 @@ cd "$TMP_PKG_DIR"
 # ==============================================================================
 # 1. Download and install core CRAN packages & reticulate dependencies
 # ==============================================================================
-echo "=== 1/3 Downloading PACKAGES file ==="
+echo "=== 1/3 Processing CRAN packages ==="
 
 wget --no-check-certificate -O PACKAGES.gz https://cloud.r-project.org/src/contrib/PACKAGES.gz
 gzip -dc PACKAGES.gz > PACKAGES
@@ -49,6 +50,12 @@ PKGS=(
 )
 
 for PKG in "${PKGS[@]}"; do
+  # Check if package is already installed
+  if Rscript -e "if (!requireNamespace('$PKG', quietly = TRUE)) quit(status = 1)" >/dev/null 2>&1; then
+    echo "[INFO] $PKG is already installed. Skipping."
+    continue
+  fi
+
   VER=$(awk -v P="$PKG" '
     $0=="Package: "P {p=1; next}
     p && $1=="Version:" {print $2; exit}
@@ -70,17 +77,22 @@ done
 # ==============================================================================
 # 2. Download, patch, and install CatReg 2.0.4
 # ==============================================================================
-echo "=== 2/3 Downloading, patching, and installing CatReg 2.0.4 ==="
+echo "=== 2/3 Processing CatReg 2.0.4 ==="
 
-wget --no-check-certificate -O CatReg_2.0.4.tar.gz https://cloud.r-project.org/src/contrib/CatReg_2.0.4.tar.gz || \
-wget --no-check-certificate -O CatReg_2.0.4.tar.gz https://cloud.r-project.org/src/contrib/Archive/CatReg/CatReg_2.0.4.tar.gz
+if Rscript -e "if (!requireNamespace('CatReg', quietly = TRUE)) quit(status = 1)" >/dev/null 2>&1; then
+  echo "[INFO] CatReg is already installed. Skipping."
+else
+  echo "[INFO] Downloading, patching, and installing CatReg 2.0.4..."
+  wget --no-check-certificate -O CatReg_2.0.4.tar.gz https://cloud.r-project.org/src/contrib/CatReg_2.0.4.tar.gz || \
+  wget --no-check-certificate -O CatReg_2.0.4.tar.gz https://cloud.r-project.org/src/contrib/Archive/CatReg/CatReg_2.0.4.tar.gz
 
-mkdir -p CatReg-src
-tar -xzf CatReg_2.0.4.tar.gz -C CatReg-src
-cp -v "$PATCH_FILE" CatReg-src/CatReg/R/predict.scope.logistic.R
+  mkdir -p CatReg-src
+  tar -xzf CatReg_2.0.4.tar.gz -C CatReg-src
+  cp -v "$PATCH_FILE" CatReg-src/CatReg/R/predict.scope.logistic.R
 
-R CMD build CatReg-src/CatReg
-R CMD INSTALL --no-lock CatReg_2.0.4.tar.gz
+  R CMD build CatReg-src/CatReg
+  R CMD INSTALL --no-lock CatReg_2.0.4.tar.gz
+fi
 
 cd "$PROJECT_DIR"
 rm -rf "$TMP_PKG_DIR"
