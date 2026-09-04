@@ -106,8 +106,8 @@ source "$VENV_DIR/bin/activate"
 
 pip install --upgrade pip
 
-# Pin numpy < 2.0.0 to use prebuilt binary wheels and avoid GCC 8.4+ build error
-pip install "numpy<2.0.0" pandas scikit-learn gurobipy rpy2
+# Use --prefer-binary and legacy NumPy 1.23.5 to avoid Meson GCC >= 8.4 check
+pip install --prefer-binary "numpy==1.23.5" "pandas<2.0.0" scikit-learn gurobipy rpy2
 
 if [ -d "$CLUSTERLEARN_DIR" ]; then
   rm -rf "$CLUSTERLEARN_DIR"
@@ -116,7 +116,7 @@ fi
 git clone https://github.com/SzymonNowakowski/ClusterLearn.git "$CLUSTERLEARN_DIR"
 
 cd "$CLUSTERLEARN_DIR/univariate"
-EIGEN_INC=$(find /usr -type d -name "eigen3" 2>/dev/null | head -n 1)
+EIGEN_INC=$(find /usr -type d -name "eigen3" 2>/devnull | head -n 1)
 
 g++ -I"${EIGEN_INC:-/usr/include/eigen3}" -fPIC -std=c++17 -c *.cpp
 g++ -shared -o proximal_c.so *.o
