@@ -16,34 +16,36 @@ VENV_DIR="$ENV_DIR/venv"
 CLUSTERLEARN_DIR="$ENV_DIR/ClusterLearn"
 PATCH_FILE="$PROJECT_DIR/R/predict.scope.logistic.R_patched"
 
+# Clean up any stale lock files from previous runs
+rm -rf ~/R/x86_64-pc-linux-gnu-library/4.1/00LOCK*
+
 mkdir -p "$TMP_PKG_DIR"
 cd "$TMP_PKG_DIR"
 
 # ==============================================================================
-# 1. Download and install standard CRAN packages via wget & R CMD INSTALL
+# 1. Download and install core CRAN packages & reticulate dependencies
 # ==============================================================================
-echo "=== 1/4 Downloading PACKAGES file ==="
+echo "=== 1/3 Downloading PACKAGES file ==="
 
 wget --no-check-certificate -O PACKAGES.gz https://cloud.r-project.org/src/contrib/PACKAGES.gz
 gzip -dc PACKAGES.gz > PACKAGES
 
+# Minimal dependency chain ordered by build hierarchy
 PKGS=(
-  # Core helper libraries
-  "R6" "RColorBrewer" "png" "rappdirs" "withr" "jsonlite" "RcppTOML"
-  "rprojroot" "here" "abind" "Formula" "utf8" "fansi" "pkgconfig" "generics"
+  # Explicit dependencies for reticulate
+  "png" "rappdirs" "withr" "jsonlite" "rlang" "RcppTOML" "rprojroot" "here"
 
-  # rlang / tidyverse ecosystem (required by modeldata and reticulate)
-  "cli" "rlang" "glue" "magrittr" "lifecycle" "vctrs" "tidyselect"
-  "pillar" "tibble" "purrr" "dplyr"
+  # Core tools & C++ headers
+  "Rcpp" "digest" "rbibutils" "Rdpack" "RcppEigen"
 
-  # Statistics, plotting, and econometrics (required by DAAG and AER)
-  "lattice" "latticeExtra" "zoo" "sandwich" "lmtest" "carData" "car"
+  # Iterators & math helper packages
+  "iterators" "foreach" "shape" "hclust1d"
 
-  # Main CRAN and ML packages
-  "Rcpp" "rbibutils" "Rdpack" "digest" "iterators" "foreach"
-  "shape" "RcppEigen" "hclust1d" "glmnet" "ranger"
-  "grpreg" "DMRnet" "randomForest" "DAAG" "wooldridge" "foreign"
-  "AER" "modeldata" "reticulate"
+  # Primary machine learning packages
+  "glmnet" "grpreg" "DMRnet" "randomForest"
+
+  # Python integration package
+  "reticulate"
 )
 
 for PKG in "${PKGS[@]}"; do
@@ -62,21 +64,13 @@ for PKG in "${PKGS[@]}"; do
   wget --no-check-certificate -O "${PKG}_${VER}.tar.gz" "https://cloud.r-project.org/src/contrib/${PKG}_${VER}.tar.gz"
 
   echo "[INFO] Installing $PKG ($VER)..."
-  R CMD INSTALL "${PKG}_${VER}.tar.gz"
+  R CMD INSTALL --no-lock "${PKG}_${VER}.tar.gz"
 done
 
 # ==============================================================================
-# 2. Download and install archived xgboost 1.7.8.1 (compatible with R 4.1.3)
+# 2. Download, patch, and install CatReg 2.0.4
 # ==============================================================================
-echo "=== 2/4 Downloading and installing archived xgboost 1.7.8.1 ==="
-
-wget --no-check-certificate -O xgboost_1.7.8.1.tar.gz https://cloud.r-project.org/src/contrib/Archive/xgboost/xgboost_1.7.8.1.tar.gz
-R CMD INSTALL xgboost_1.7.8.1.tar.gz
-
-# ==============================================================================
-# 3. Download, patch, and install CatReg 2.0.4
-# ==============================================================================
-echo "=== 3/4 Downloading, patching, and installing CatReg 2.0.4 ==="
+echo "=== 2/3 Downloading, patching, and installing CatReg 2.0.4 ==="
 
 wget --no-check-certificate -O CatReg_2.0.4.tar.gz https://cloud.r-project.org/src/contrib/CatReg_2.0.4.tar.gz || \
 wget --no-check-certificate -O CatReg_2.0.4.tar.gz https://cloud.r-project.org/src/contrib/Archive/CatReg/CatReg_2.0.4.tar.gz
@@ -86,15 +80,15 @@ tar -xzf CatReg_2.0.4.tar.gz -C CatReg-src
 cp -v "$PATCH_FILE" CatReg-src/CatReg/R/predict.scope.logistic.R
 
 R CMD build CatReg-src/CatReg
-R CMD INSTALL CatReg_2.0.4.tar.gz
+R CMD INSTALL --no-lock CatReg_2.0.4.tar.gz
 
 cd "$PROJECT_DIR"
 rm -rf "$TMP_PKG_DIR"
 
 # ==============================================================================
-# 4. Setup Python virtual environment & compile ClusterLearn
+# 3. Setup Python virtual environment & compile ClusterLearn
 # ==============================================================================
-echo "=== 4/4 Setting up Python venv and compiling ClusterLearn ==="
+echo "=== 3/3 Setting up Python venv and compiling ClusterLearn ==="
 
 python3 -m venv "$VENV_DIR"
 source "$VENV_DIR/bin/activate"
