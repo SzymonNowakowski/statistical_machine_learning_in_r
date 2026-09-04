@@ -102,7 +102,24 @@ rm -rf "$TMP_PKG_DIR"
 # ==============================================================================
 echo "=== 3/3 Setting up Python venv and compiling ClusterLearn ==="
 
-python3 -m venv "$VENV_DIR"
+# Find a suitable Python 3 executable
+PYTHON_BIN=""
+for cmd in python3 /usr/bin/python3 /usr/bin/python3.8 /usr/bin/python3.9 /usr/bin/python3.10; do
+  if command -v "$cmd" &>/dev/null; then
+    PYTHON_BIN="$cmd"
+    break
+  fi
+done
+
+if [ -z "$PYTHON_BIN" ]; then
+  echo "[ERROR] Python 3 executable not found on the compute node!"
+  echo "[HINT] Run 'module avail python' on the login node and update 'module load' in this script."
+  exit 1
+fi
+
+echo "[INFO] Using Python binary: $PYTHON_BIN"
+
+"$PYTHON_BIN" -m venv "$VENV_DIR"
 source "$VENV_DIR/bin/activate"
 
 pip install --upgrade pip
@@ -115,7 +132,7 @@ fi
 git clone https://github.com/SzymonNowakowski/ClusterLearn.git "$CLUSTERLEARN_DIR"
 
 cd "$CLUSTERLEARN_DIR/univariate"
-EIGEN_INC=$(find /usr -type d -name "eigen3" 2>/devnull | head -n 1)
+EIGEN_INC=$(find /usr -type d -name "eigen3" 2>/dev/null | head -n 1)
 
 g++ -I"${EIGEN_INC:-/usr/include/eigen3}" -fPIC -std=c++17 -c *.cpp
 g++ -shared -o proximal_c.so *.o
