@@ -6,6 +6,9 @@
 #SBATCH --partition=msys
 #SBATCH --exclude=msys2
 
+#SBATCH --output=install_%j.out
+#SBATCH --error=install_%j.err
+
 echo "=== Loading modules ==="
 module load r/4.1.3
 module load python/3.9.1
