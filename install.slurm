@@ -8,7 +8,7 @@
 
 echo "=== Loading modules ==="
 module load r/4.1.3
-module load python/3 2>/dev/null || module load python 2>/dev/null || true
+module load python/3.9.1
 
 PROJECT_DIR=$(pwd)
 TMP_PKG_DIR="$PROJECT_DIR/build_tmp_pkgs"
@@ -50,7 +50,6 @@ PKGS=(
 )
 
 for PKG in "${PKGS[@]}"; do
-  # Check if package is already installed
   if Rscript -e "if (!requireNamespace('$PKG', quietly = TRUE)) quit(status = 1)" >/dev/null 2>&1; then
     echo "[INFO] $PKG is already installed. Skipping."
     continue
@@ -102,24 +101,7 @@ rm -rf "$TMP_PKG_DIR"
 # ==============================================================================
 echo "=== 3/3 Setting up Python venv and compiling ClusterLearn ==="
 
-# Find a suitable Python 3 executable
-PYTHON_BIN=""
-for cmd in python3 /usr/bin/python3 /usr/bin/python3.8 /usr/bin/python3.9 /usr/bin/python3.10; do
-  if command -v "$cmd" &>/dev/null; then
-    PYTHON_BIN="$cmd"
-    break
-  fi
-done
-
-if [ -z "$PYTHON_BIN" ]; then
-  echo "[ERROR] Python 3 executable not found on the compute node!"
-  echo "[HINT] Run 'module avail python' on the login node and update 'module load' in this script."
-  exit 1
-fi
-
-echo "[INFO] Using Python binary: $PYTHON_BIN"
-
-"$PYTHON_BIN" -m venv "$VENV_DIR"
+python3 -m venv "$VENV_DIR"
 source "$VENV_DIR/bin/activate"
 
 pip install --upgrade pip
