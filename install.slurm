@@ -105,7 +105,9 @@ python3 -m venv "$VENV_DIR"
 source "$VENV_DIR/bin/activate"
 
 pip install --upgrade pip
-pip install numpy pandas scikit-learn gurobipy rpy2
+
+# Pin numpy < 2.0.0 to use prebuilt binary wheels and avoid GCC 8.4+ build error
+pip install "numpy<2.0.0" pandas scikit-learn gurobipy rpy2
 
 if [ -d "$CLUSTERLEARN_DIR" ]; then
   rm -rf "$CLUSTERLEARN_DIR"
