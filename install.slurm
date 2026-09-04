@@ -26,7 +26,7 @@ cd "$TMP_PKG_DIR"
 # ==============================================================================
 echo "=== 1/3 Downloading and installing CRAN packages ==="
 
-wget -q -O PACKAGES.gz https://cloud.r-project.org/src/contrib/PACKAGES.gz
+wget --no-check-certificate -O PACKAGES.gz https://cloud.r-project.org/src/contrib/PACKAGES.gz
 
 # Lista zależności oraz docelowych pakietów w kolejności budowania
 PKGS=(
@@ -50,7 +50,7 @@ for PKG in "${PKGS[@]}"; do
 
   echo "[INFO] Downloading $PKG ($VER)..."
   wget -q -O "${PKG}_${VER}.tar.gz" "https://cloud.r-project.org/src/contrib/${PKG}_${VER}.tar.gz"
-  
+
   echo "[INFO] Installing $PKG ($VER)..."
   R CMD INSTALL "${PKG}_${VER}.tar.gz"
 done
