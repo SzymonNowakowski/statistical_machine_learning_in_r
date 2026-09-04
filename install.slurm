@@ -101,6 +101,10 @@ rm -rf "$TMP_PKG_DIR"
 # ==============================================================================
 echo "=== 3/3 Setting up Python venv and compiling ClusterLearn ==="
 
+# Force build tools to use GCC 8.1.0 instead of legacy CC 4.4.7
+export CC=gcc
+export CXX=g++
+
 # Set R environment variables required by rpy2
 export R_HOME=$(R RHOME)
 export LD_LIBRARY_PATH="$R_HOME/lib:$LD_LIBRARY_PATH"
@@ -110,8 +114,8 @@ source "$VENV_DIR/bin/activate"
 
 pip install --upgrade pip
 
-# Pin rpy2 < 3.5.0 and numpy 1.23.5 for R 4.1.3 & GCC compatibility
-pip install --prefer-binary "numpy==1.23.5" "pandas<2.0.0" "rpy2<3.5.0" scikit-learn gurobipy
+# numpy==1.21.6 provides prebuilt wheels for glibc 2.12 (manylinux2010) on Python 3.9
+pip install --prefer-binary "numpy==1.21.6" "pandas<2.0.0" "rpy2<3.5.0" scikit-learn gurobipy
 
 if [ -d "$CLUSTERLEARN_DIR" ]; then
   rm -rf "$CLUSTERLEARN_DIR"
