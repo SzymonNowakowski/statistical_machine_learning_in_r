@@ -28,10 +28,22 @@ wget --no-check-certificate -O PACKAGES.gz https://cloud.r-project.org/src/contr
 gzip -dc PACKAGES.gz > PACKAGES
 
 PKGS=(
+  # Core helper libraries
+  "R6" "RColorBrewer" "png" "rappdirs" "withr" "jsonlite" "RcppTOML"
+  "rprojroot" "here" "abind" "Formula" "utf8" "fansi" "pkgconfig" "generics"
+
+  # rlang / tidyverse ecosystem (required by modeldata and reticulate)
+  "cli" "rlang" "glue" "magrittr" "lifecycle" "vctrs" "tidyselect"
+  "pillar" "tibble" "purrr" "dplyr"
+
+  # Statistics, plotting, and econometrics (required by DAAG and AER)
+  "lattice" "latticeExtra" "zoo" "sandwich" "lmtest" "carData" "car"
+
+  # Main CRAN and ML packages
   "Rcpp" "rbibutils" "Rdpack" "digest" "iterators" "foreach"
   "shape" "RcppEigen" "hclust1d" "glmnet" "ranger"
   "grpreg" "DMRnet" "randomForest" "DAAG" "wooldridge" "foreign"
-  "carData" "AER" "modeldata" "reticulate"
+  "AER" "modeldata" "reticulate"
 )
 
 for PKG in "${PKGS[@]}"; do
