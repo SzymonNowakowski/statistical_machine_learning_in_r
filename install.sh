@@ -1,7 +1,7 @@
 #!/bin/bash -l
 
-# Enable execution tracing (-x), fail on error (-e), and print shell input (-v)
-set -euxo pipefail
+# Enable fail on error (-e)
+set -euo pipefail
 
 echo "======================================================================"
 echo "[VERBOSE] Starting execution at $(date)"
