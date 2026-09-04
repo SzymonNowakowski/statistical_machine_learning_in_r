@@ -15,6 +15,9 @@ echo "[VERBOSE] Loading R module..."
 module load r/4.1.3
 module list
 
+# Fix missing liblzma.so.5 dependency
+export LD_LIBRARY_PATH="/mnt/soft/schrodinger/2023-3/mmshare-v6.3/lib/Linux-x86_64:${LD_LIBRARY_PATH:-}"
+
 # Define isolated installation directories
 PROJECT_DIR=$(pwd)
 ENV_DIR="$PROJECT_DIR/env"
