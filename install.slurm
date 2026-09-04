@@ -101,13 +101,17 @@ rm -rf "$TMP_PKG_DIR"
 # ==============================================================================
 echo "=== 3/3 Setting up Python venv and compiling ClusterLearn ==="
 
+# Set R environment variables required by rpy2
+export R_HOME=$(R RHOME)
+export LD_LIBRARY_PATH="$R_HOME/lib:$LD_LIBRARY_PATH"
+
 python3 -m venv "$VENV_DIR"
 source "$VENV_DIR/bin/activate"
 
 pip install --upgrade pip
 
-# Use --prefer-binary and legacy NumPy 1.23.5 to avoid Meson GCC >= 8.4 check
-pip install --prefer-binary "numpy==1.23.5" "pandas<2.0.0" scikit-learn gurobipy rpy2
+# Pin rpy2 < 3.5.0 and numpy 1.23.5 for R 4.1.3 & GCC compatibility
+pip install --prefer-binary "numpy==1.23.5" "pandas<2.0.0" "rpy2<3.5.0" scikit-learn gurobipy
 
 if [ -d "$CLUSTERLEARN_DIR" ]; then
   rm -rf "$CLUSTERLEARN_DIR"
@@ -116,7 +120,7 @@ fi
 git clone https://github.com/SzymonNowakowski/ClusterLearn.git "$CLUSTERLEARN_DIR"
 
 cd "$CLUSTERLEARN_DIR/univariate"
-EIGEN_INC=$(find /usr -type d -name "eigen3" 2>/devnull | head -n 1)
+EIGEN_INC=$(find /usr -type d -name "eigen3" 2>/dev/null | head -n 1)
 
 g++ -I"${EIGEN_INC:-/usr/include/eigen3}" -fPIC -std=c++17 -c *.cpp
 g++ -shared -o proximal_c.so *.o
