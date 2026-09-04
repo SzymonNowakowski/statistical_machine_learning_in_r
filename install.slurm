@@ -6,8 +6,6 @@
 #SBATCH --partition=msys
 #SBATCH --exclude=msys2
 
-set -euo pipefail
-
 echo "=== Loading R module ==="
 module load r/4.1.3
 
@@ -24,11 +22,11 @@ cd "$TMP_PKG_DIR"
 # ==============================================================================
 # 1. Download and install CRAN packages via wget & R CMD INSTALL
 # ==============================================================================
-echo "=== 1/3 Downloading and installing CRAN packages ==="
+echo "=== 1/3 Downloading PACKAGES file ==="
 
 wget --no-check-certificate -O PACKAGES.gz https://cloud.r-project.org/src/contrib/PACKAGES.gz
+gzip -dc PACKAGES.gz > PACKAGES
 
-# Lista zależności oraz docelowych pakietów w kolejności budowania
 PKGS=(
   "Rcpp" "rbibutils" "Rdpack" "digest" "iterators" "foreach"
   "shape" "RcppEigen" "hclust1d" "xgboost" "glmnet" "ranger"
@@ -37,19 +35,19 @@ PKGS=(
 )
 
 for PKG in "${PKGS[@]}"; do
-  VER=$(gzip -dc PACKAGES.gz | awk -v P="$PKG" '
-    $0=="Package: "P{p=1; next}
-    p && $1=="Version:"{print $2; exit}
-    p && $0==""{p=0}
-  ')
+  VER=$(awk -v P="$PKG" '
+    $0=="Package: "P {p=1; next}
+    p && $1=="Version:" {print $2; exit}
+    p && $0=="" {p=0}
+  ' PACKAGES)
 
   if [ -z "$VER" ]; then
-    echo "[ERROR] Cannot find version for $PKG in PACKAGES.gz"
-    exit 1
+    echo "[ERROR] Cannot find version for $PKG in PACKAGES"
+    continue
   fi
 
   echo "[INFO] Downloading $PKG ($VER)..."
-  wget -q -O "${PKG}_${VER}.tar.gz" "https://cloud.r-project.org/src/contrib/${PKG}_${VER}.tar.gz"
+  wget --no-check-certificate -O "${PKG}_${VER}.tar.gz" "https://cloud.r-project.org/src/contrib/${PKG}_${VER}.tar.gz"
 
   echo "[INFO] Installing $PKG ($VER)..."
   R CMD INSTALL "${PKG}_${VER}.tar.gz"
@@ -60,8 +58,8 @@ done
 # ==============================================================================
 echo "=== 2/3 Downloading, patching, and installing CatReg 2.0.4 ==="
 
-wget -q -O CatReg_2.0.4.tar.gz https://cloud.r-project.org/src/contrib/CatReg_2.0.4.tar.gz || \
-wget -q -O CatReg_2.0.4.tar.gz https://cloud.r-project.org/src/contrib/Archive/CatReg/CatReg_2.0.4.tar.gz
+wget --no-check-certificate -O CatReg_2.0.4.tar.gz https://cloud.r-project.org/src/contrib/CatReg_2.0.4.tar.gz || \
+wget --no-check-certificate -O CatReg_2.0.4.tar.gz https://cloud.r-project.org/src/contrib/Archive/CatReg/CatReg_2.0.4.tar.gz
 
 mkdir -p CatReg-src
 tar -xzf CatReg_2.0.4.tar.gz -C CatReg-src
