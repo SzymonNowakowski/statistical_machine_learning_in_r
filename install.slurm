@@ -101,39 +101,48 @@ rm -rf "$TMP_PKG_DIR"
 # ==============================================================================
 # 3. Setup Python environment (Miniconda with --enable-shared) & compile ClusterLearn
 # ==============================================================================
-echo "=== 3/3 Setting up Python environment and compiling ClusterLearn ==="
+# ==============================================================================
+# 3. Compile custom Python 3.9 (--enable-shared) & setup venv
+# ==============================================================================
+echo "=== 3/3 Building custom Python 3.9 and compiling ClusterLearn ==="
 
-# Force build tools to use GCC 8.1.0 instead of legacy CC 4.4.7
 export CC=gcc
 export CXX=g++
 
-# Instalacja lokalnej Minicondy w katalogu domowym (jeśli jeszcze nie istnieje)
-MINICONDA_DIR="$HOME/miniconda3"
-if [ ! -d "$MINICONDA_DIR" ]; then
-  echo "[INFO] Downloading and installing local Miniconda to provide shared Python libraries..."
-  wget --no-check-certificate -O miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-  bash miniconda.sh -b -p "$MINICONDA_DIR"
-  rm miniconda.sh
+PYTHON_BUILD_DIR="$HOME/python39_shared"
+
+if [ ! -f "$PYTHON_BUILD_DIR/bin/python3" ]; then
+  echo "[INFO] Building Python 3.9.18 from source with --enable-shared..."
+  mkdir -p "$PROJECT_DIR/python_source"
+  cd "$PROJECT_DIR/python_source"
+
+  wget --no-check-certificate https://www.python.org/ftp/python/3.9.18/Python-3.9.18.tgz
+  tar -xzf Python-3.9.18.tgz
+  cd Python-3.9.18
+
+  ./configure --prefix="$PYTHON_BUILD_DIR" --enable-shared
+  make -j${SLURM_CPUS_PER_TASK:-2}
+  make install
+
+  cd "$PROJECT_DIR"
+  rm -rf "$PROJECT_DIR/python_source"
 fi
 
-source "$MINICONDA_DIR/bin/activate"
+export LD_LIBRARY_PATH="$PYTHON_BUILD_DIR/lib:$LD_LIBRARY_PATH"
 
-# Usunięcie starego venv i utworzenie środowiska Conda w tej samej lokalizacji $VENV_DIR
 if [ -d "$VENV_DIR" ]; then
   rm -rf "$VENV_DIR"
 fi
 
-echo "[INFO] Creating Python 3.9 environment with shared libraries at $VENV_DIR..."
-conda create -p "$VENV_DIR" python=3.9 -y
-conda activate "$VENV_DIR"
+echo "[INFO] Creating venv from custom shared Python build..."
+"$PYTHON_BUILD_DIR/bin/python3" -m venv "$VENV_DIR"
+source "$VENV_DIR/bin/activate"
 
 # Set R environment variables required by rpy2
 export R_HOME=$(R RHOME)
-export LD_LIBRARY_PATH="$R_HOME/lib:$VENV_DIR/lib:$LD_LIBRARY_PATH"
+export LD_LIBRARY_PATH="$R_HOME/lib:$VENV_DIR/lib:$PYTHON_BUILD_DIR/lib:$LD_LIBRARY_PATH"
 
 pip install --upgrade pip
-
-# numpy==1.21.6 provides prebuilt wheels for glibc 2.12 (manylinux2010) on Python 3.9
 pip install --prefer-binary "numpy==1.21.6" "pandas<2.0.0" "rpy2<3.5.0" scikit-learn gurobipy
 
 if [ -d "$CLUSTERLEARN_DIR" ]; then
