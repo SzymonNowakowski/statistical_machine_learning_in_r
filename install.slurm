@@ -11,7 +11,6 @@
 
 echo "=== Loading modules ==="
 module load r/4.1.3
-module load python/3.9.1
 
 PROJECT_DIR=$(pwd)
 TMP_PKG_DIR="$PROJECT_DIR/build_tmp_pkgs"
@@ -100,20 +99,37 @@ cd "$PROJECT_DIR"
 rm -rf "$TMP_PKG_DIR"
 
 # ==============================================================================
-# 3. Setup Python virtual environment & compile ClusterLearn
+# 3. Setup Python environment (Miniconda with --enable-shared) & compile ClusterLearn
 # ==============================================================================
-echo "=== 3/3 Setting up Python venv and compiling ClusterLearn ==="
+echo "=== 3/3 Setting up Python environment and compiling ClusterLearn ==="
 
 # Force build tools to use GCC 8.1.0 instead of legacy CC 4.4.7
 export CC=gcc
 export CXX=g++
 
+# Instalacja lokalnej Minicondy w katalogu domowym (jeśli jeszcze nie istnieje)
+MINICONDA_DIR="$HOME/miniconda3"
+if [ ! -d "$MINICONDA_DIR" ]; then
+  echo "[INFO] Downloading and installing local Miniconda to provide shared Python libraries..."
+  wget --no-check-certificate -O miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+  bash miniconda.sh -b -p "$MINICONDA_DIR"
+  rm miniconda.sh
+fi
+
+source "$MINICONDA_DIR/bin/activate"
+
+# Usunięcie starego venv i utworzenie środowiska Conda w tej samej lokalizacji $VENV_DIR
+if [ -d "$VENV_DIR" ]; then
+  rm -rf "$VENV_DIR"
+fi
+
+echo "[INFO] Creating Python 3.9 environment with shared libraries at $VENV_DIR..."
+conda create -p "$VENV_DIR" python=3.9 -y
+conda activate "$VENV_DIR"
+
 # Set R environment variables required by rpy2
 export R_HOME=$(R RHOME)
-export LD_LIBRARY_PATH="$R_HOME/lib:$LD_LIBRARY_PATH"
-
-python3 -m venv "$VENV_DIR"
-source "$VENV_DIR/bin/activate"
+export LD_LIBRARY_PATH="$R_HOME/lib:$VENV_DIR/lib:$LD_LIBRARY_PATH"
 
 pip install --upgrade pip
 

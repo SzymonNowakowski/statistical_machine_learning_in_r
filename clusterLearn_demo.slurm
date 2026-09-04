@@ -10,22 +10,24 @@
 
 echo "=== Loading modules ==="
 module load r/4.1.3
-module load python/3.9.1
 
 echo "=== Setting up environment ==="
 PROJECT_DIR=$(pwd)
 VENV_DIR="$PROJECT_DIR/env/venv"
 
-export R_HOME=$(R RHOME)
-export LD_LIBRARY_PATH="$R_HOME/lib:$LD_LIBRARY_PATH"
+# Aktywacja środowiska Conda utworzonego w skrypcie instalacyjnym
+source "$HOME/miniconda3/bin/activate"
+conda activate "$VENV_DIR"
 
-source "$VENV_DIR/bin/activate"
+# Konfiguracja zmiennych środowiskowych dla R i reticulate
+export R_HOME=$(R RHOME)
+export LD_LIBRARY_PATH="$R_HOME/lib:$VENV_DIR/lib:$LD_LIBRARY_PATH"
 export RETICULATE_PYTHON="$VENV_DIR/bin/python"
 
 echo "=== Running ClusterLearn Demo (In-Memory Patch) ==="
 cd "$PROJECT_DIR"
 
-# Run the R script with in-memory patching to replace /opt/venv with ./env/venv
+# Podmiana /opt/venv na ./env/venv w locie i przekazanie bezpośrednio do Rscript
 sed 's|/opt/venv|./env/venv|g' clusterLearn_demo.R | Rscript -
 
 echo "=== Execution finished ==="
