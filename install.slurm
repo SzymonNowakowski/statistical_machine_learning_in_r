@@ -20,16 +20,16 @@ mkdir -p "$TMP_PKG_DIR"
 cd "$TMP_PKG_DIR"
 
 # ==============================================================================
-# 1. Download and install CRAN packages via wget & R CMD INSTALL
+# 1. Download and install standard CRAN packages via wget & R CMD INSTALL
 # ==============================================================================
-echo "=== 1/3 Downloading PACKAGES file ==="
+echo "=== 1/4 Downloading PACKAGES file ==="
 
 wget --no-check-certificate -O PACKAGES.gz https://cloud.r-project.org/src/contrib/PACKAGES.gz
 gzip -dc PACKAGES.gz > PACKAGES
 
 PKGS=(
   "Rcpp" "rbibutils" "Rdpack" "digest" "iterators" "foreach"
-  "shape" "RcppEigen" "hclust1d" "xgboost" "glmnet" "ranger"
+  "shape" "RcppEigen" "hclust1d" "glmnet" "ranger"
   "grpreg" "DMRnet" "randomForest" "DAAG" "wooldridge" "foreign"
   "carData" "AER" "modeldata" "reticulate"
 )
@@ -54,9 +54,17 @@ for PKG in "${PKGS[@]}"; do
 done
 
 # ==============================================================================
-# 2. Download, patch, and install CatReg 2.0.4
+# 2. Download and install archived xgboost 1.7.8.1 (compatible with R 4.1.3)
 # ==============================================================================
-echo "=== 2/3 Downloading, patching, and installing CatReg 2.0.4 ==="
+echo "=== 2/4 Downloading and installing archived xgboost 1.7.8.1 ==="
+
+wget --no-check-certificate -O xgboost_1.7.8.1.tar.gz https://cloud.r-project.org/src/contrib/Archive/xgboost/xgboost_1.7.8.1.tar.gz
+R CMD INSTALL xgboost_1.7.8.1.tar.gz
+
+# ==============================================================================
+# 3. Download, patch, and install CatReg 2.0.4
+# ==============================================================================
+echo "=== 3/4 Downloading, patching, and installing CatReg 2.0.4 ==="
 
 wget --no-check-certificate -O CatReg_2.0.4.tar.gz https://cloud.r-project.org/src/contrib/CatReg_2.0.4.tar.gz || \
 wget --no-check-certificate -O CatReg_2.0.4.tar.gz https://cloud.r-project.org/src/contrib/Archive/CatReg/CatReg_2.0.4.tar.gz
@@ -72,9 +80,9 @@ cd "$PROJECT_DIR"
 rm -rf "$TMP_PKG_DIR"
 
 # ==============================================================================
-# 3. Setup Python virtual environment & compile ClusterLearn
+# 4. Setup Python virtual environment & compile ClusterLearn
 # ==============================================================================
-echo "=== 3/3 Setting up Python venv and compiling ClusterLearn ==="
+echo "=== 4/4 Setting up Python venv and compiling ClusterLearn ==="
 
 python3 -m venv "$VENV_DIR"
 source "$VENV_DIR/bin/activate"
@@ -89,7 +97,7 @@ fi
 git clone https://github.com/SzymonNowakowski/ClusterLearn.git "$CLUSTERLEARN_DIR"
 
 cd "$CLUSTERLEARN_DIR/univariate"
-EIGEN_INC=$(find /usr -type d -name "eigen3" 2>/dev/null | head -n 1)
+EIGEN_INC=$(find /usr -type d -name "eigen3" 2>/devnull | head -n 1)
 
 g++ -I"${EIGEN_INC:-/usr/include/eigen3}" -fPIC -std=c++17 -c *.cpp
 g++ -shared -o proximal_c.so *.o
